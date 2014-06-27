@@ -96,7 +96,7 @@ class HistoricalRecords(object):
         history_model = self.create_history_model(sender)
 
         models.signals.pre_save.connect(self.pre_save, sender=sender, weak=False)
-        models.signals.post_delete.connect(self.post_delete, sender=sender, weak=False)
+        models.signals.pre_delete.connect(self.pre_delete, sender=sender, weak=False)
         models.signals.post_save.connect(self.post_save, sender=sender, weak=False)
 
         descriptor = HistoryDescriptor(history_model)
@@ -180,7 +180,7 @@ class HistoricalRecords(object):
         if created:
             self.create_historical_record(instance, '+')
 
-    def post_delete(self, instance, **kwargs):
+    def pre_delete(self, instance, **kwargs):
         self.create_historical_record(instance, '-')
 
     def create_historical_record(self, instance, history_type):
@@ -191,7 +191,7 @@ class HistoricalRecords(object):
         #collecting changed fields
         history_data = {}
         history_all_data = {}
-        if instance.pk and history_type != '-':
+        if instance.pk:
             old = instance.__class__._default_manager.get(pk = instance.pk)
             for field in instance._meta.fields:
                 if (self.exclude and field.name in self.exclude) or (self.include and field.name not in self.include):
@@ -229,7 +229,7 @@ class FullHistoricalRecords(object):
         # so the signal handlers can't use weak references.
         models.signals.post_save.connect(self.post_save, sender=sender,
                                          weak=False)
-        models.signals.post_delete.connect(self.post_delete, sender=sender,
+        models.signals.pre_delete.connect(self.pre_delete, sender=sender,
                                            weak=False)
 
         descriptor = HistoryDescriptor(history_model)
@@ -314,7 +314,7 @@ class FullHistoricalRecords(object):
     def post_save(self, instance, created, **kwargs):
         self.create_historical_record(instance, created and '+' or '~')
 
-    def post_delete(self, instance, **kwargs):
+    def pre_delete(self, instance, **kwargs):
         self.create_historical_record(instance, '-')
 
     def create_historical_record(self, instance, type):

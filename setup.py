@@ -2,11 +2,11 @@ from setuptools import setup, find_packages
  
 setup(
     name='django-history',
-    version='0.1.1',
+    version='0.1.2',
     description='Django History',
-    author='Ildus K.',
-    author_email='k-dus@yandex.ru',
-    url='https://github.com/django-history',
+    author='Magiq',
+    author_email='magiqm@gmail.com',
+    url='https://github.com/freezlite/django-history',
     packages=find_packages(),
     requires = ['south', 'progressbar'],
     classifiers=[

@@ -30,12 +30,7 @@ class FieldRegistry(object):
 
 
 class CurrentUserMiddleware(object):
-    def process_request(self, request):
-        if request.method in ('GET', 'HEAD', 'OPTIONS', 'TRACE'):
-            # This request shouldn't update anything,
-            # so no singal handler should be attached.
-            return
-            
+    def process_request(self, request):   
         user = request.user if hasattr(request, 'user') and request.user.is_authenticated() else None
 
         update_context = curry(self.update_context, user)

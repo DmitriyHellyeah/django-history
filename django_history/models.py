@@ -269,6 +269,9 @@ class FullHistoricalRecords(object):
                 field.__class__ = models.IntegerField
             if isinstance(field, models.OneToOneField):
                 field.__class__ = models.ForeignKey
+            if isinstance(field, models.ForeignKey):
+                if hasattr(field.rel, 'related_name'):
+                    field.rel.related_name = None
 
             if field.primary_key or field.unique:
                 # Unique fields can no longer be guaranteed unique,

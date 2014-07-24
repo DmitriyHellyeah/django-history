@@ -227,10 +227,12 @@ class FullHistoricalRecords(object):
 
         # The HistoricalRecords object will be discarded,
         # so the signal handlers can't use weak references.
-        models.signals.post_save.connect(self.post_save, sender=sender,
+        models.signals.pre_save.connect(self.pre_save, sender=sender,
                                          weak=False)
         models.signals.pre_delete.connect(self.pre_delete, sender=sender,
                                            weak=False)
+        models.signals.post_save.connect(self.post_save, sender=sender,
+                                         weak=False)
 
         descriptor = HistoryDescriptor(history_model)
         setattr(sender, self.manager_name, descriptor)
@@ -293,12 +295,14 @@ class FullHistoricalRecords(object):
             'history_id': models.AutoField(primary_key=True),
             'history_date': models.DateTimeField(default=datetime.datetime.now),
             'history_user': CurrentUserField(related_name=rel_nm),
+            'history_data': models.TextField(), #here is only the changed data
             'history_type': models.CharField(max_length=1, choices=(
                 ('+', 'Created'),
                 ('~', 'Changed'),
                 ('-', 'Deleted'),
             )),
             'history_object': HistoricalObjectDescriptor(model),
+            'get_data': lambda self: pickle.loads(self.history_data.encode('utf-8')),
             '__unicode__': lambda self: u'%s на %s' % (self.history_object,
                                                           self.history_date.strftime('%d.%m.%Y %H:%M'))
         }
@@ -314,8 +318,13 @@ class FullHistoricalRecords(object):
             'verbose_name_plural': u'История: %s' % model._meta.verbose_name_plural
         }
 
+    def pre_save(self, instance, **kwargs):
+        if instance.pk:
+            self.create_historical_record(instance, '~')
+        
     def post_save(self, instance, created, **kwargs):
-        self.create_historical_record(instance, created and '+' or '~')
+        if created:
+            self.create_historical_record(instance, '+')
 
     def pre_delete(self, instance, **kwargs):
         self.create_historical_record(instance, '-')
@@ -323,9 +332,24 @@ class FullHistoricalRecords(object):
     def create_historical_record(self, instance, type):
         manager = getattr(instance, self.manager_name)
         attrs = {}
+
+        attrs = {}
+        attrs[instance._meta.pk.name] = getattr(instance, instance._meta.pk.name)
+        #collecting changed fields
+        history_data = {}
+        if instance.pk:
+            old = instance.__class__._default_manager.get(pk = instance.pk)
+            for field in instance._meta.fields:                               
+                if field.editable and not isinstance(field, models.ManyToManyField):
+                    new_value = getattr(instance, field.attname)
+                    old_value = getattr(old, field.attname)                    
+                    
+                    if new_value != old_value:
+                        history_data[field.attname] = (old_value, new_value)
+
         for field in instance._meta.fields:
             attrs[field.attname] = getattr(instance, field.attname)
-        manager.create(history_type=type, **attrs)
+        manager.create(history_type=type, history_data = pickle.dumps(history_data), **attrs)
 
 
 class HistoricalObjectDescriptor(object):

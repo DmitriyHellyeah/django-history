@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
  
 setup(
     name='django-history',
-    version='0.1.2',
+    version='0.2',
     description='Django History',
     author='Magiq',
     author_email='magiqm@gmail.com',

@@ -7,12 +7,12 @@ from django.utils.decorators import decorator_from_middleware
 
 def get_user_model():
     try:
-        from django.contrib.auth import get_user_model
+        from django.conf import settings
     except ImportError: # django < 1.5
         from django.contrib.auth.models import User
         return User
     else:
-        return get_user_model()
+        return settings.AUTH_USER_MODEL
 
 
 class FieldRegistry(object):

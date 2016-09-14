@@ -12,7 +12,7 @@ def get_user_model():
         from django.contrib.auth.models import User
         return User
     else:
-        return settings.AUTH_USER_MODEL
+        return django.settings.AUTH_USER_MODEL
 
 
 class FieldRegistry(object):

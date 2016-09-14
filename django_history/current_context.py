@@ -1,4 +1,6 @@
 #coding: utf-8
+import django
+from distutils.version import StrictVersion
 from django.db import models
 from django.db.models import signals
 from django.utils.functional import curry
@@ -6,9 +8,7 @@ from django.utils.decorators import decorator_from_middleware
 
 
 def get_user_model():
-    try:
-        from django.conf import settings
-    except ImportError: # django < 1.5
+    if StrictVersion(django.get_version()) < StrictVersion('1.5'):
         from django.contrib.auth.models import User
         return User
     else:

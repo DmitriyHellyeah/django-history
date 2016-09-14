@@ -1,5 +1,6 @@
 #coding: utf-8
 import django
+from django.conf import settings
 from distutils.version import StrictVersion
 from django.db import models
 from django.db.models import signals
@@ -12,7 +13,7 @@ def get_user_model():
         from django.contrib.auth.models import User
         return User
     else:
-        return django.settings.AUTH_USER_MODEL
+        return settings.AUTH_USER_MODEL
 
 
 class FieldRegistry(object):

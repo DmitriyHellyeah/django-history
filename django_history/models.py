@@ -172,7 +172,7 @@ class HistoricalRecords(object):
         return options
 
     def pre_save(self, instance, **kwargs):
-        if instance.pk:
+        if not instance._state.adding:
             self.create_historical_record(instance, '~')
         
     def post_save(self, instance, created, **kwargs):
@@ -318,7 +318,7 @@ class FullHistoricalRecords(object):
         }
 
     def pre_save(self, instance, **kwargs):
-        if instance.pk:
+        if not instance._state.adding:
             self.create_historical_record(instance, '~')
         
     def post_save(self, instance, created, **kwargs):

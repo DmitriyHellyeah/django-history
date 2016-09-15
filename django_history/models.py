@@ -214,8 +214,11 @@ class HistoricalRecords(object):
 class FullHistoricalRecords(object):
     registry = {}  # register history models
 
-    def __init__(self, register_in_admin=False):
+    def __init__(self, register_in_admin=False, excluded_fields=None):
+        if excluded_fields is None:
+            excluded_fields = []
         self.register_in_admin = register_in_admin
+        self.excluded_fields = excluded_fields
 
     def contribute_to_class(self, cls, name):
         self.manager_name = name
@@ -261,7 +264,8 @@ class FullHistoricalRecords(object):
         # is required for a model to function properly.
         fields = {'__module__': model.__module__}
 
-        for field in model._meta.fields:
+        fields_to_copy = set(model._meta.fields) - set(self.excluded_fields)
+        for field in fields_to_copy:
             field = copy(field)
 
             if isinstance(field, models.AutoField):

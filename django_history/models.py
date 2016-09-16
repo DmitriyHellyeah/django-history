@@ -264,8 +264,7 @@ class FullHistoricalRecords(object):
         # is required for a model to function properly.
         fields = {'__module__': model.__module__}
 
-        fields_to_copy = set(model._meta.fields) - set(self.excluded_fields)
-        for field in fields_to_copy:
+        for field in model._meta.fields:
             field = copy(field)
 
             if isinstance(field, models.AutoField):
@@ -349,6 +348,11 @@ class FullHistoricalRecords(object):
                     
                     if new_value != old_value:
                         history_data[field.attname] = (old_value, new_value)
+
+        # If changes are present only in "excluded fields" - do nothing.
+        # If not - record everything as usual
+        if type == '~' and history_data.keys() == self.excluded_fields:
+            return
 
         for field in instance._meta.fields:
             attrs[field.attname] = getattr(instance, field.attname)

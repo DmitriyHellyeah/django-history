@@ -214,8 +214,11 @@ class HistoricalRecords(object):
 class FullHistoricalRecords(object):
     registry = {}  # register history models
 
-    def __init__(self, register_in_admin=False):
+    def __init__(self, register_in_admin=False, excluded_fields=None):
+        if excluded_fields is None:
+            excluded_fields = []
         self.register_in_admin = register_in_admin
+        self.excluded_fields = excluded_fields
 
     def contribute_to_class(self, cls, name):
         self.manager_name = name
@@ -345,6 +348,11 @@ class FullHistoricalRecords(object):
                     
                     if new_value != old_value:
                         history_data[field.attname] = (old_value, new_value)
+
+        # If changes are present only in "excluded fields" - do nothing.
+        # If not - record everything as usual
+        if type == '~' and history_data.keys() == self.excluded_fields:
+            return
 
         for field in instance._meta.fields:
             attrs[field.attname] = getattr(instance, field.attname)
